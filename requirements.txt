@@ -1,0 +1,22 @@
+# --- Xử lý & Phân tích dữ liệu ---
+numpy
+pandas
+
+# --- Trực quan hóa dữ liệu (Dành cho phần EDA) ---
+matplotlib
+seaborn
+
+# --- Machine Learning lõi ---
+# (Chứa Linear, Ridge, Random Forest, Scaler, Metrics, GridSearchCV)
+scikit-learn
+
+# --- Gradient Boosting (Dành cho Modeling Lead 2) ---
+xgboost
+lightgbm
+
+# --- Phân tích & Diễn giải mô hình (Mở rộng ưu tiên 3) ---
+shap
+
+# --- Môi trường chạy Notebook (.ipynb) ---
+jupyter
+ipykernel
