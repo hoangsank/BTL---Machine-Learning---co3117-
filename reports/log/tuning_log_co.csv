@@ -1,0 +1,16 @@
+params,mean_test_score,std_test_score,mean_fit_time
+"{'subsample': 0.7, 'n_estimators': 300, 'max_depth': 5, 'learning_rate': 0.01, 'colsample_bytree': 1.0}",0.5837101617167276,0.17883807516011554,1.2891600131988525
+"{'subsample': 0.8, 'n_estimators': 200, 'max_depth': 5, 'learning_rate': 0.01, 'colsample_bytree': 1.0}",0.581957967426623,0.15424899157755553,0.8712202707926432
+"{'subsample': 1.0, 'n_estimators': 200, 'max_depth': 7, 'learning_rate': 0.01, 'colsample_bytree': 0.7}",0.5628771497431847,0.16650736356547388,1.7570350964864094
+"{'subsample': 0.7, 'n_estimators': 200, 'max_depth': 5, 'learning_rate': 0.05, 'colsample_bytree': 1.0}",0.5443991541243237,0.2241636484196076,0.7583882013956705
+"{'subsample': 0.7, 'n_estimators': 300, 'max_depth': 9, 'learning_rate': 0.01, 'colsample_bytree': 0.8}",0.5369726520748556,0.2077482683226453,4.900160074234009
+"{'subsample': 0.8, 'n_estimators': 300, 'max_depth': 5, 'learning_rate': 0.05, 'colsample_bytree': 0.8}",0.523200302255174,0.24366168212473288,1.2373627821604412
+"{'subsample': 1.0, 'n_estimators': 200, 'max_depth': 9, 'learning_rate': 0.05, 'colsample_bytree': 0.8}",0.5025682566551997,0.2610816788566701,2.1848369439442954
+"{'subsample': 0.7, 'n_estimators': 300, 'max_depth': 3, 'learning_rate': 0.2, 'colsample_bytree': 1.0}",0.5003431230827274,0.25878340162260244,0.6666708787282308
+"{'subsample': 0.8, 'n_estimators': 500, 'max_depth': 5, 'learning_rate': 0.1, 'colsample_bytree': 0.7}",0.49636405146424006,0.24884826095975363,1.5642412503560383
+"{'subsample': 1.0, 'n_estimators': 100, 'max_depth': 9, 'learning_rate': 0.05, 'colsample_bytree': 1.0}",0.49258774708700664,0.2588479428952827,1.994937260945638
+"{'subsample': 0.8, 'n_estimators': 500, 'max_depth': 3, 'learning_rate': 0.2, 'colsample_bytree': 0.8}",0.48794033330629016,0.24843786250126254,1.1504132747650146
+"{'subsample': 0.8, 'n_estimators': 500, 'max_depth': 7, 'learning_rate': 0.05, 'colsample_bytree': 0.7}",0.48548687914753685,0.2768064170462836,3.5116695562998452
+"{'subsample': 0.7, 'n_estimators': 300, 'max_depth': 5, 'learning_rate': 0.1, 'colsample_bytree': 1.0}",0.4840154825547048,0.27199819472898445,1.1678580443064372
+"{'subsample': 1.0, 'n_estimators': 300, 'max_depth': 5, 'learning_rate': 0.2, 'colsample_bytree': 0.8}",0.48229327272941164,0.24713512618693326,0.7395188013712565
+"{'subsample': 1.0, 'n_estimators': 300, 'max_depth': 9, 'learning_rate': 0.2, 'colsample_bytree': 0.8}",0.4315269660115701,0.3439796367899123,4.183002630869548
