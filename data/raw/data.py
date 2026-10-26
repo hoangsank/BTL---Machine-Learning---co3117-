@@ -1,10 +1,8 @@
 from ucimlrepo import fetch_ucirepo
 import pandas as pd
 import os
-import ssl
 
-# Ép Python bỏ qua kiểm tra chứng chỉ SSL
-ssl._create_default_https_context = ssl._create_unverified_context
+
 # 1. Tải dataset từ UCI
 dataset = fetch_ucirepo(id=551)
 
