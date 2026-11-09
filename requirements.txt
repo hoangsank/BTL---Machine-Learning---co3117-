@@ -1,6 +1,7 @@
 # --- Xử lý & Phân tích dữ liệu ---
 numpy
 pandas
+ucimlrepo
 
 # --- Trực quan hóa dữ liệu (Dành cho phần EDA) ---
 matplotlib
