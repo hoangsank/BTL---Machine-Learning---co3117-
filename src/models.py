@@ -2,6 +2,8 @@ import time
 
 import numpy as np
 import pandas as pd
+import xgboost as xgb
+from sklearn.model_selection import RandomizedSearchCV
 from scipy.stats import wilcoxon
 from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import RandomForestRegressor
@@ -101,6 +103,57 @@ def compare_models(a, b, preds, y_test):
         "p_value": float(p_value),
     }
 
+def build_xgboost_model(tuned=False, target="CO"):
+    """Tạo mô hình XGBoost (Baseline hoặc Tuned với tham số tối ưu)."""
+    if not tuned:
+        return xgb.XGBRegressor(random_state=SEED, n_jobs=-1)
+
+    # Siêu tham số tối ưu tìm được từ RandomizedSearchCV
+    if target == "CO":
+        params = {
+            "n_estimators": 300,
+            "max_depth": 5,
+            "learning_rate": 0.01,
+            "subsample": 0.7,
+            "colsample_bytree": 1.0,
+        }
+    else:  # target == "NOX"
+        params = {
+            "n_estimators": 300,
+            "max_depth": 5,
+            "learning_rate": 0.05,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+        }
+
+    return xgb.XGBRegressor(**params, random_state=SEED, n_jobs=-1)
+
+
+def tune_xgboost(
+    X_train, y_train, n_iter=15, cv=3, random_state=SEED, n_jobs=-1
+):
+    """Thực hiện dò tìm siêu tham số ngẫu nhiên (RandomizedSearchCV) cho XGBoost."""
+    param_grid = {
+        "n_estimators": [100, 200, 300, 500],
+        "max_depth": [3, 5, 7, 9],
+        "learning_rate": [0.01, 0.05, 0.1, 0.2],
+        "subsample": [0.7, 0.8, 1.0],
+        "colsample_bytree": [0.7, 0.8, 1.0],
+    }
+
+    base_model = xgb.XGBRegressor(random_state=random_state)
+    search = RandomizedSearchCV(
+        estimator=base_model,
+        param_distributions=param_grid,
+        n_iter=n_iter,
+        scoring="r2",
+        cv=cv,
+        verbose=1,
+        random_state=random_state,
+        n_jobs=n_jobs,
+    )
+    search.fit(X_train, y_train)
+    return search.best_estimator_, search.best_params_, search.cv_results_
 
 __all__ = [
     "SEED",
@@ -109,6 +162,8 @@ __all__ = [
     "compute_vif",
     "permutation_importance_report",
     "compare_models",
+    "build_xgboost_model",
+    "tune_xgboost",
 ]
 
 
