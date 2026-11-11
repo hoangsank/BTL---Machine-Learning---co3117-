@@ -16,6 +16,38 @@ FS_BASE = BASE_FEATURES
 FS_COMPACT = ['AT', 'AP', 'AH', 'AFDP', 'TIT', 'TAT']
 FS_ENGINEERED = BASE_FEATURES + ENGINEERED_FEATURES
 
+TRAIN_YEARS = [2011, 2012, 2013]
+TEST_YEARS = [2014, 2015]
+CO_CLIP_QUANTILE = 0.99
+
+
+def load_train_test(raw_path):
+    """Đọc dữ liệu gốc và chia train/test theo đúng luồng tiền xử lý của nhóm (notebooks/01_eda.ipynb).
+
+    Loại dòng trùng lặp, chia theo năm (2011-2013 / 2014-2015), tính ngưỡng p99 của CO
+    CHỈ trên train rồi dùng ngưỡng đó cắt CO ở cả hai tập thành `CO_clipped`.
+    Các feature giữ nguyên đơn vị gốc (chưa chuẩn hoá) vì feature vật lý cần số liệu gốc.
+    Trả về (train, test, co_p99_threshold).
+    """
+    df = pd.read_csv(raw_path).drop_duplicates()
+    train = df[df['year'].isin(TRAIN_YEARS)].reset_index(drop=True)
+    test = df[df['year'].isin(TEST_YEARS)].reset_index(drop=True)
+    threshold = float(train['CO'].quantile(CO_CLIP_QUANTILE))
+    train['CO_clipped'] = train['CO'].clip(upper=threshold)
+    test['CO_clipped'] = test['CO'].clip(upper=threshold)
+    return train, test, threshold
+
+
+def check_raw_units(X):
+    """Báo lỗi nếu feature không ở đơn vị gốc (ví dụ đã qua StandardScaler).
+
+    Tỉ số CDP/GTEP và độ ẩm tuyệt đối chỉ đúng trên số liệu gốc; với dữ liệu đã chuẩn hoá
+    chúng vẫn ra số nhưng sai hoàn toàn, nên cần chặn sớm.
+    """
+    if (X['AP'] < 500).any() or (X['TIT'] < 500).any() or (X['GTEP'] <= 0).any():
+        raise ValueError('Feature không ở đơn vị gốc (có thể đã được chuẩn hoá). '
+                         'Hãy tính add_physical_features trên dữ liệu gốc rồi mới chuẩn hoá.')
+
 
 def absolute_humidity(temp_c, rel_humidity_pct):
     """Độ ẩm tuyệt đối (g/m³) từ nhiệt độ (°C) và độ ẩm tương đối (%).
@@ -30,7 +62,8 @@ def absolute_humidity(temp_c, rel_humidity_pct):
 
 
 def add_physical_features(X):
-    """Thêm các feature dẫn xuất từ 9 cột gốc. Trả về bản sao, không sửa X."""
+    """Thêm các feature dẫn xuất từ 9 cột gốc (đơn vị gốc, chưa chuẩn hoá). Trả về bản sao, không sửa X."""
+    check_raw_units(X)
     X = X.copy()
     X['TIT_TAT_diff'] = X['TIT'] - X['TAT']
     X['TEY_per_TIT'] = X['TEY'] / X['TIT']
