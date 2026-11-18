@@ -3,7 +3,7 @@ import time
 import numpy as np
 import pandas as pd
 import xgboost as xgb
-from sklearn.model_selection import RandomizedSearchCV
+from sklearn.model_selection import KFold, ParameterSampler, RandomizedSearchCV
 from scipy.stats import wilcoxon
 from sklearn.dummy import DummyRegressor
 from sklearn.ensemble import RandomForestRegressor
@@ -130,9 +130,9 @@ def build_xgboost_model(tuned=False, target="CO"):
 
 
 def tune_xgboost(
-    X_train, y_train, n_iter=15, cv=3, random_state=SEED, n_jobs=-1
+    X_train, y_train, n_iter=15, cv=3, random_state=42, n_jobs=-1, clip_p99=False
 ):
-    """Thực hiện dò tìm siêu tham số ngẫu nhiên (RandomizedSearchCV) cho XGBoost."""
+    """Dò siêu tham số XGBoost; nếu clip_p99=True thì tính P99 riêng trên y_train của từng fold."""
     param_grid = {
         "n_estimators": [100, 200, 300, 500],
         "max_depth": [3, 5, 7, 9],
@@ -141,19 +141,53 @@ def tune_xgboost(
         "colsample_bytree": [0.7, 0.8, 1.0],
     }
 
-    base_model = xgb.XGBRegressor(random_state=random_state)
-    search = RandomizedSearchCV(
-        estimator=base_model,
-        param_distributions=param_grid,
-        n_iter=n_iter,
-        scoring="r2",
-        cv=cv,
-        verbose=1,
-        random_state=random_state,
-        n_jobs=n_jobs,
-    )
-    search.fit(X_train, y_train)
-    return search.best_estimator_, search.best_params_, search.cv_results_
+    X_arr = np.asarray(X_train)
+    y_arr = np.asarray(y_train).ravel()
+    kf = KFold(n_splits=cv, shuffle=True, random_state=random_state)
+    param_list = list(ParameterSampler(param_grid, n_iter=n_iter, random_state=random_state))
+
+    records = []
+    for params in param_list:
+        fold_scores, fold_times = [], []
+        for tr_idx, val_idx in kf.split(X_arr):
+            X_tr, y_tr = X_arr[tr_idx], y_arr[tr_idx]
+            X_val, y_val = X_arr[val_idx], y_arr[val_idx]
+
+            if clip_p99:
+                p99_fold = np.quantile(y_tr, 0.99)
+                y_tr_fit = np.clip(y_tr, None, p99_fold)
+            else:
+                y_tr_fit = y_tr
+
+            t0 = time.perf_counter()
+            model = xgb.XGBRegressor(random_state=random_state, n_jobs=n_jobs, **params)
+            model.fit(X_tr, y_tr_fit)
+            fold_times.append(time.perf_counter() - t0)
+
+            preds = model.predict(X_val)
+            fold_scores.append(r2_score(y_val, preds))  # Chấm trên y_val gốc
+
+        records.append({
+            "params": params,
+            "mean_test_score": float(np.mean(fold_scores)),
+            "std_test_score": float(np.std(fold_scores)),
+            "mean_fit_time": float(np.mean(fold_times)),
+        })
+
+    cv_results_df = pd.DataFrame(records).sort_values("mean_test_score", ascending=False)
+    best_params = cv_results_df.iloc[0]["params"]
+
+    if clip_p99:
+        p99_train = np.quantile(y_arr, 0.99)
+        y_train_fit = np.clip(y_arr, None, p99_train)
+    else:
+        y_train_fit = y_arr
+
+    best_model = xgb.XGBRegressor(random_state=random_state, n_jobs=n_jobs, **best_params)
+    best_model.fit(X_arr, y_train_fit)
+
+    return best_model, best_params, cv_results_df
+
 
 __all__ = [
     "SEED",
