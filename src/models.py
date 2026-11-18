@@ -1,4 +1,5 @@
 import time
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -10,6 +11,7 @@ from sklearn.linear_model import LinearRegression, RidgeCV
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.neural_network import MLPRegressor
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
 SEED = 42
 
@@ -102,6 +104,49 @@ def compare_models(a, b, preds, y_test):
     }
 
 
+def tune_and_save_log(
+    model,
+    param_space,
+    X_train,
+    y_train,
+    model_name,
+    search_type="grid",
+    cv=5,
+    output_dir=None,
+):
+    """Tune a model and save the cross-validation log to CSV."""
+    if search_type == "grid":
+        search = GridSearchCV(
+            estimator=model,
+            param_grid=param_space,
+            cv=cv,
+            scoring="neg_root_mean_squared_error",
+            n_jobs=1,
+            verbose=1,
+        )
+    else:
+        search = RandomizedSearchCV(
+            estimator=model,
+            param_distributions=param_space,
+            n_iter=20,
+            cv=cv,
+            scoring="neg_root_mean_squared_error",
+            n_jobs=-1,
+            random_state=SEED,
+            verbose=1,
+        )
+
+    search.fit(X_train, y_train)
+    cv_results = pd.DataFrame(search.cv_results_)
+
+    output_dir = Path(output_dir) if output_dir is not None else Path.cwd()
+    output_dir.mkdir(parents=True, exist_ok=True)
+    csv_path = output_dir / f"cv_results_{model_name}.csv"
+    cv_results.to_csv(csv_path, index=False)
+
+    return search.best_estimator_, csv_path
+
+
 __all__ = [
     "SEED",
     "build_model",
@@ -109,6 +154,5 @@ __all__ = [
     "compute_vif",
     "permutation_importance_report",
     "compare_models",
+    "tune_and_save_log",
 ]
-
-
