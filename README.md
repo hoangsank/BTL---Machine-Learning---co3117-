@@ -34,6 +34,9 @@ Các mô hình: dự đoán trung bình (`DummyRegressor`), Linear Regression, R
 .
 ├── README.md
 ├── requirements.txt
+├── Dockerfile                   # Môi trường Python/Jupyter trong container
+├── compose.yaml                 # Khởi chạy và lưu kết quả ra máy
+├── .dockerignore                # Loại môi trường ảo/cache khỏi build context
 ├── ke-hoach-btl-ml.md            # Kế hoạch và phân công ban đầu
 ├── data/
 │   ├── raw/
@@ -92,6 +95,62 @@ python -m jupyter lab
 
 Cần Internet khi cài thư viện. Sau đó các notebook dùng CSV đi kèm, không cần tải dữ liệu trực tuyến. Trong Jupyter, chọn kernel của môi trường vừa tạo.
 
+### Chạy bằng Docker
+
+Cài và mở **Docker Desktop**, chọn chế độ **Linux containers**, chờ Docker Engine sẵn sàng. Trên Linux có thể dùng Docker Engine kèm Docker Compose. Không cần cài Python riêng trên máy.
+
+Mở PowerShell tại thư mục dự án (nơi chứa `Dockerfile` và `compose.yaml`):
+
+```powershell
+cd D:\BTL---Machine-Learning---co3117-
+docker compose up --build
+```
+
+Nếu giải nén bài nộp sang vị trí khác, thay đường dẫn `cd` bằng thư mục vừa giải nén. Lần đầu cần Internet để tải image và thư viện, có thể mất vài phút.
+
+Khi terminal hiện Jupyter Server đã chạy, mở [http://localhost:8888](http://localhost:8888) và nhập token từ terminal (chuỗi phía sau `?token=`). Jupyter tự sinh token mỗi lần khởi động; giữ nguyên xác thực mặc định.
+
+Trong JupyterLab:
+
+1. Mở thư mục `notebooks/`, chọn `01_eda.ipynb`.
+2. Chọn kernel **Python 3 (ipykernel)** của container, kể cả khi notebook còn hiện tên môi trường cũ.
+3. Chọn **Run → Run All Cells** để thử bước tiền xử lý.
+4. Nếu thành công, chạy tiếp notebook 02, 03 và 04 theo mục 4.
+
+Container dùng Python 3.12, cài thư viện từ `requirements.txt` và `libgomp1` cho XGBoost. Compose gắn thư mục dự án trên máy vào `/app`, nên notebook, dữ liệu xử lý, mô hình và ảnh trong `reports/figures/` được lưu trực tiếp về thư mục bài nộp.
+
+Để dừng, nhấn `Ctrl+C` trong terminal, rồi chạy:
+
+```bash
+docker compose down
+```
+
+Kết quả đã lưu trên máy vẫn còn. Những lần sau có thể dùng `docker compose up`; thêm `--build` khi thay đổi Dockerfile hoặc requirements. Trên Linux, tài khoản container có UID 1000; thư mục dự án cần cho phép tài khoản này ghi để lưu kết quả.
+
+Nếu chỉ muốn chạy bản dự án được đóng sẵn trong image, không gắn thư mục máy:
+
+```bash
+docker build -t co3117-gas-turbine:local .
+docker run --name co3117-notebook --init -p 127.0.0.1:8888:8888 co3117-gas-turbine:local
+```
+
+Lấy kết quả về máy **trước khi xóa container**:
+
+```bash
+docker cp co3117-notebook:/app/reports ./reports-docker
+docker cp co3117-notebook:/app/models ./models-docker
+docker cp co3117-notebook:/app/data/processed ./processed-docker
+docker rm -f co3117-notebook
+```
+
+Xử lý lỗi thường gặp:
+
+- **Không kết nối được Docker daemon/engine:** mở Docker Desktop, chờ engine sẵn sàng rồi chạy lại. Có thể dùng `docker info` để kiểm tra.
+- **Cổng 8888 đang được dùng:** trong `compose.yaml`, đổi thành `127.0.0.1:8889:8888`, khởi động lại và mở `http://localhost:8889`.
+- **Không tìm thấy dữ liệu:** kiểm tra bản giải nén có đủ `data/raw/gas_turbine_data.csv` và `data/processed/`; chạy lại notebook 01 nếu cần tạo train/test.
+
+Cấu hình Compose đã được kiểm tra hợp lệ. Bản Docker chưa được kiểm tra build/chạy hoàn chỉnh do Docker Engine chưa sẵn sàng trong lần kiểm tra trước.
+
 ## 4. Thứ tự chạy
 
 Mở từng notebook trong `notebooks/`, chọn **Restart Kernel and Run All Cells**. Thư mục làm việc của kernel cần là `notebooks/`, đặc biệt với notebook 04 vì sử dụng đường dẫn `../data/...`.
@@ -137,7 +196,7 @@ Script này ghi đè CSV gốc. CSV dùng cho pipeline phải có cột `year`, 
 
 Giữ nguyên cấu trúc và gửi kèm:
 
-- `README.md`, `requirements.txt`, `src/`, đủ 4 notebook.
+- `README.md`, `requirements.txt`, `Dockerfile`, `compose.yaml`, `.dockerignore`, `src/`, đủ 4 notebook.
 - `data/raw/gas_turbine_data.csv`, `data/processed/` để người chấm có dữ liệu chạy ngay.
 - `models/`, `reports/figures/`, `reports/log/` để đối chiếu kết quả.
 - Báo cáo tổng kết và slide theo yêu cầu môn học. **Thư mục hiện chưa có báo cáo tổng kết hoặc slide**; bổ sung trước khi nộp nếu được yêu cầu.
