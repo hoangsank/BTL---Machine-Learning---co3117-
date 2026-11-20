@@ -1,23 +1,19 @@
-# --- Xử lý & Phân tích dữ liệu ---
-numpy
-pandas
-ucimlrepo
+# Python 3.12. Versions from the project's .venv-vscode metadata.
+# Direct runtime dependencies
+numpy==2.5.3
+pandas==3.0.6
+scipy==1.18.1
+joblib==1.6.0
+matplotlib==3.11.2
+seaborn==0.13.2
+scikit-learn==1.9.1
+xgboost==3.4.1
+shap==0.52.0
 
-# --- Trực quan hóa dữ liệu (Dành cho phần EDA) ---
-matplotlib
-seaborn
+# Notebook environment
+jupyterlab==4.6.4
+ipykernel==7.3.0
+nbconvert==7.17.1
 
-# --- Machine Learning lõi ---
-# (Chứa Linear, Ridge, Random Forest, Scaler, Metrics, GridSearchCV)
-scikit-learn
-
-# --- Gradient Boosting (Dành cho Modeling Lead 2) ---
-xgboost
-lightgbm
-
-# --- Phân tích & Diễn giải mô hình (Mở rộng ưu tiên 3) ---
-shap
-
-# --- Môi trường chạy Notebook (.ipynb) ---
-jupyter
-ipykernel
+# Optional: pip install ucimlrepo (only for data/raw/data.py).
+# The dataset is included; ucimlrepo is not needed by the notebooks.
